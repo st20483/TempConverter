@@ -4,18 +4,16 @@ class Converter:
   
   def __init__(self):
     # common format for all buttons 
-    # Arial size 14 bold, with white text, blue background, button width is 12 char
+    # Arial size 14 bold, with white text, blue background, button width is 12 char, allround padding of 10px
     btn_font = ("Arial 12 bold")
     btn_fg = "#FFFFFF"
     btn_bg = "#008CFF"
     btn_width = "12"
-    # common format for appropriate widgets
-    # allround padding of 10px
-    padx_num = 10
-    pady_num = 10
+    padx_num = 5
+    pady_num = 5
     
     # set up GUI Frame
-    self.temp_frame = Frame(padx=padx_num, pady=pady_num)
+    self.temp_frame = Frame(padx=10, pady=10)
     self.temp_frame.grid()
 
     self.temp_heading = Label(self.temp_frame, text="Temperature Converter", font=("Arial 16 bold"))
@@ -25,8 +23,10 @@ class Converter:
     self.temp_instructions = Label(self.temp_frame, text=instructions, wrap=250, width=40)
     self.temp_instructions.grid(row=1)
 
-    self.temp_entry = Entry(self.temp_frame, font=("Arial 14"))
-    self.temp_entry.grid(row=2, padx=padx_num, pady=pady_num)
+    self.degrees=DoubleVar()
+    self.degrees.set("")
+    self.temp_entry = Entry(self.temp_frame, font=("Arial 12"), bg="white", text=self.degrees)
+    self.temp_entry.grid(row=2, padx=10, pady=10)
 
     error = "Please enter a number"
     self.temp_error = Label(self.temp_frame, text=error, fg="#FF0000")
@@ -41,8 +41,27 @@ class Converter:
 
     self.to_fahrenheit_button = Button(self.button_frame, text="To ° Fahrenheit", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
     self.to_fahrenheit_button.grid(row=0, column=1, padx=padx_num, pady=pady_num)
-    
 
+    self.to_info_button = Button(self.button_frame, text="Info", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
+    self.to_info_button.grid(row=1, column=0, padx=padx_num, pady=pady_num)
+
+    self.to_history_button = Button(self.button_frame, text="History / Export", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, state=DISABLED)
+    self.to_history_button.grid(row=1, column=1, padx=padx_num, pady=pady_num)
+
+    self.to_quit_button = Button(self.button_frame, text="Quit Programme", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
+    self.to_quit_button.grid(row=2, column=0, columnspan=2, padx=padx_num, pady=pady_num)
+
+  def check_temp(min_value):
+    error = "Please enter a number that is more than {}".format(min_value)
+
+    try:
+      response = float(input("Choose a number: "))
+      if response < min_value:
+        print(error)
+      else: 
+        return response
+    except ValueError:
+      print(error)
 # main routine
 if __name__ == "__main__":
   root = Tk()
