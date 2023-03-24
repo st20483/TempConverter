@@ -3,6 +3,14 @@ from tkinter import *
 class Converter:
   
   def __init__(self):
+
+    # Initialising variables (such as feedback variable)
+    self.var_feedback = StringVar()
+    self.var_feedback.set("")
+
+    self.var_has_error = StringVar()
+    self.var_has_error.set("no")
+    
     # common format for all buttons 
     # Arial size 14 bold, with white text, blue background, button width is 12 char, allround padding of 10px
     btn_font = ("Arial 12 bold")
@@ -26,8 +34,7 @@ class Converter:
     self.temp_entry = Entry(self.temp_frame, font=("Arial 12"), bg="white")
     self.temp_entry.grid(row=2, padx=10, pady=10)
 
-    error = "Please enter a number"
-    self.temp_error = Label(self.temp_frame, text="", fg="#FF0000")
+    self.temp_error = Label(self.temp_frame, font=("Ariel 12 bold"), wrap=300, width=30)
     self.temp_error.grid(row=3)
 
     # Conversions, help, history / export and quit programme buttons
@@ -49,28 +56,91 @@ class Converter:
     self.to_quit_button = Button(self.button_frame, text="Quit Programme", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
     self.to_quit_button.grid(row=2, column=0, columnspan=2, padx=padx_num, pady=pady_num)
 
+  # checks user input and if it's valid, converts temperature
   def check_temp(self, min_value, tail):
-    error = f"Please enter a number that is more than {min_value}{tail}"
-
+    has_error = "no"
+    error = f"Please enter a number that is minimum {min_value}{tail}"
+    
+    # check that user has entered a valid number...
+    response = self.temp_entry.get()
+    
     try:
-      response = float(self.temp_entry.get())
+      response = float(response)
       if response < min_value:
-        self.temp_error.config(text=error)
-      else: 
-        return response
+        has_error = "yes"
+      
     except ValueError:
-      self.temp_error.config(text=error)
+      has_error = "yes"
 
+    # Sets var_has_error so that entry box and
+    # labels can be correctly formatted by formatting function
+    if has_error == "yes":
+      self.var_has_error.set("yes")
+      self.var_feedback.set(error)
+      return "invalid"
+
+    # If we have no errors...
+    else:
+      # set self.var_has_error to False in case of previous errors
+      self.var_has_error.set("no")
+
+      # return number to be converted and
+      # enable history button
+      self.to_history_button.config(state=NORMAL)
+      return response
+
+  # Check temperature is more than -459.7 and
+  # convert to Celsius
   def to_celsius(self):
-    self.check_temp(-459.7, "° Celsius")
+    to_convert = self.check_temp(-459.7, "° Celsius")
 
+    if to_convert != "invalid":
+      # do calculation
+      to_convert = float(to_convert)
+      converted = (to_convert - 32) / 1.8
+      
+      # put conrversion into self.temp_error message
+      message = f"{to_convert:.1f}° Celsius = {converted:.1f}° Fahrenheit"
+      self.var_feedback.set(message)
+    self.output_answer()
+
+  # Check temperature is more than -273.2 and
+  # convert to Fahrenheit
   def to_fahrenheit(self):
-    self.check_temp(-273.2, "° Fahrenheit")
+    to_convert = self.check_temp(-273.2, "° Fahrenheit")
 
+    if to_convert != "invalid":
+      # do calculation
+      to_convert = float(to_convert)
+      converted = (to_convert * 1.8) + 32
+      
+      # put conrversion into self.temp_error message
+      message = f"{to_convert:.1f}° Fahrenheit = {converted:.1f}° Celsius"
+      self.var_feedback.set(message)
+    self.output_answer()
+
+  # Shows user output and clears entry widget to be
+  # ready for next calculation
+  def output_answer(self):
+    output = self.var_feedback.get()
+    has_errors = self.var_has_error.get()
+
+    if has_errors == "yes":
+      # red text, pink entry box
+      self.temp_error.config(fg="#FF0000")
+      self.temp_entry.config(bg="#FC9093")
+      
+    else:
+      # green text, white entry box
+      self.temp_error.config(fg="#004C00")
+      self.temp_entry.config(bg="#FFFFFF")
+
+    self.temp_error.config(text=output)
+    
 # main routine
 if __name__ == "__main__":
   root = Tk()
   root.title("Temperature Converter")
-  root.geometry("400x350")
+  root.geometry("450x400")
   Converter()
   root.mainloop()
