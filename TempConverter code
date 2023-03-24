@@ -23,23 +23,21 @@ class Converter:
     self.temp_instructions = Label(self.temp_frame, text=instructions, wrap=250, width=40)
     self.temp_instructions.grid(row=1)
 
-    self.degrees=DoubleVar()
-    self.degrees.set("")
-    self.temp_entry = Entry(self.temp_frame, font=("Arial 12"), bg="white", text=self.degrees)
+    self.temp_entry = Entry(self.temp_frame, font=("Arial 12"), bg="white")
     self.temp_entry.grid(row=2, padx=10, pady=10)
 
     error = "Please enter a number"
-    self.temp_error = Label(self.temp_frame, text=error, fg="#FF0000")
+    self.temp_error = Label(self.temp_frame, text="", fg="#FF0000")
     self.temp_error.grid(row=3)
 
     # Conversions, help, history / export and quit programme buttons
     self.button_frame = Frame(self.temp_frame)
     self.button_frame.grid(row=4)
 
-    self.to_celsius_button = Button(self.button_frame, text="To ° Celsius", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
+    self.to_celsius_button = Button(self.button_frame, text="To ° Celsius", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=self.to_celsius)
     self.to_celsius_button.grid(row=0, column=0, padx=padx_num, pady=pady_num)
 
-    self.to_fahrenheit_button = Button(self.button_frame, text="To ° Fahrenheit", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
+    self.to_fahrenheit_button = Button(self.button_frame, text="To ° Fahrenheit", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=self.to_fahrenheit)
     self.to_fahrenheit_button.grid(row=0, column=1, padx=padx_num, pady=pady_num)
 
     self.to_info_button = Button(self.button_frame, text="Info", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
@@ -51,20 +49,28 @@ class Converter:
     self.to_quit_button = Button(self.button_frame, text="Quit Programme", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
     self.to_quit_button.grid(row=2, column=0, columnspan=2, padx=padx_num, pady=pady_num)
 
-  def check_temp(min_value):
-    error = "Please enter a number that is more than {}".format(min_value)
+  def check_temp(self, min_value, tail):
+    error = f"Please enter a number that is more than {min_value}{tail}"
 
     try:
-      response = float(input("Choose a number: "))
+      response = float(self.temp_entry.get())
       if response < min_value:
-        print(error)
+        self.temp_error.config(text=error)
       else: 
         return response
     except ValueError:
-      print(error)
+      self.temp_error.config(text=error)
+
+  def to_celsius(self):
+    self.check_temp(-459.7, "° Celsius")
+
+  def to_fahrenheit(self):
+    self.check_temp(-273.2, "° Fahrenheit")
+
 # main routine
 if __name__ == "__main__":
   root = Tk()
   root.title("Temperature Converter")
+  root.geometry("400x350")
   Converter()
   root.mainloop()
