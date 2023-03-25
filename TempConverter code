@@ -1,7 +1,8 @@
 from tkinter import *
 
 class Converter:
-  
+
+  # 
   def __init__(self):
 
     # Initialising variables (such as feedback variable)
@@ -28,14 +29,14 @@ class Converter:
     self.temp_heading.grid(row=0)
 
     instructions = "Type in a temperature in the box below, then press one of the two buttons to convert either to Celsius or Fahrenheit. Converted temperatures are rounded to 1 d.p."
-    self.temp_instructions = Label(self.temp_frame, text=instructions, wrap=250, width=40)
+    self.temp_instructions = Label(self.temp_frame, text=instructions, wraplength="250", width="40")
     self.temp_instructions.grid(row=1)
 
     self.temp_entry = Entry(self.temp_frame, font=("Arial 12"), bg="white")
     self.temp_entry.grid(row=2, padx=10, pady=10)
 
-    self.temp_error = Label(self.temp_frame, font=("Ariel 12 bold"), wrap=300, width=30)
-    self.temp_error.grid(row=3)
+    self.temp_output = Label(self.temp_frame, font=("Ariel 12 bold"), wraplength="300", width="30")
+    self.temp_output.grid(row=3)
 
     # Conversions, help, history / export and quit programme buttons
     self.button_frame = Frame(self.temp_frame)
@@ -53,10 +54,12 @@ class Converter:
     self.to_history_button = Button(self.button_frame, text="History / Export", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, state=DISABLED)
     self.to_history_button.grid(row=1, column=1, padx=padx_num, pady=pady_num)
 
-    self.to_quit_button = Button(self.button_frame, text="Quit Programme", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
+    self.to_quit_button = Button(self.button_frame, text="Quit Programme", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=quit)
     self.to_quit_button.grid(row=2, column=0, columnspan=2, padx=padx_num, pady=pady_num)
 
-  # checks user input and if it's valid, converts temperature
+  # checks user input and if it's invalid, creates error
+  # message and put into var_feedback variable
+  # Also saves in var_has_error whether there is error
   def check_temp(self, min_value, tail):
     has_error = "no"
     error = f"Please enter a number that is minimum {min_value}{tail}"
@@ -92,33 +95,40 @@ class Converter:
   # Check temperature is more than -459.7 and
   # convert to Celsius
   def to_celsius(self):
-    to_convert = self.check_temp(-459.7, "° Celsius")
+    to_convert = self.check_temp(-459.7, "° Fahrenheit")
 
     if to_convert != "invalid":
       # do calculation
       to_convert = float(to_convert)
       converted = (to_convert - 32) / 1.8
-      
-      # put conrversion into self.temp_error message
-      message = f"{to_convert:.1f}° Celsius = {converted:.1f}° Fahrenheit"
+      message = self.round_1dp(to_convert, converted, "° Celsius")
       self.var_feedback.set(message)
     self.output_answer()
 
   # Check temperature is more than -273.2 and
   # convert to Fahrenheit
   def to_fahrenheit(self):
-    to_convert = self.check_temp(-273.2, "° Fahrenheit")
+    to_convert = self.check_temp(-273.2, "° Celsius")
 
     if to_convert != "invalid":
       # do calculation
       to_convert = float(to_convert)
       converted = (to_convert * 1.8) + 32
-      
-      # put conrversion into self.temp_error message
-      message = f"{to_convert:.1f}° Fahrenheit = {converted:.1f}° Celsius"
+      message = self.round_1dp(to_convert, converted, "° Fahrenheit")
       self.var_feedback.set(message)
     self.output_answer()
 
+  # Rounds calculation to 1 decimal place and
+  # sets output message
+  def round_1dp(self, round_to_convert, round_converted, round_to_temp):
+    round_to_convert = round(round_to_convert, 1)
+    round_converted = round(round_converted, 1)
+    if round_to_temp == "° Celsius":
+      round_message = f"{round_to_convert}° Fahrenheit = {round_converted}° Celsius"
+    elif round_to_temp == "° Fahrenheit":
+      round_message = f"{round_to_convert}° Celsius = {round_converted}° Fahrenheit"
+    return round_message
+  
   # Shows user output and clears entry widget to be
   # ready for next calculation
   def output_answer(self):
@@ -127,20 +137,25 @@ class Converter:
 
     if has_errors == "yes":
       # red text, pink entry box
-      self.temp_error.config(fg="#FF0000")
+      self.temp_output.config(fg="#FF0000")
       self.temp_entry.config(bg="#FC9093")
       
     else:
       # green text, white entry box
-      self.temp_error.config(fg="#004C00")
+      self.temp_output.config(fg="#004C00")
       self.temp_entry.config(bg="#FFFFFF")
+      
+    self.temp_entry.config(textvariable="")
+    self.temp_output.config(text=output)
+    self.temp_entry.delete(0, END)
 
-    self.temp_error.config(text=output)
-    
+  def quit(self):
+    self.destroy()
 # main routine
 if __name__ == "__main__":
   root = Tk()
   root.title("Temperature Converter")
-  root.geometry("450x400")
+  root.geometry("375x350")
+  root.resizable(0, 0)
   Converter()
   root.mainloop()
