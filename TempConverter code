@@ -2,18 +2,21 @@ from tkinter import *
 
 class Converter:
 
-  # 
   def __init__(self):
 
     # Initialising variables (such as feedback variable)
     self.var_feedback = StringVar()
     self.var_feedback.set("")
 
-    self.var_has_error = StringVar()
-    self.var_has_error.set("no")
+    self.var_has_error = BooleanVar()
+    self.var_has_error.set(False)
+
+    # List to store all conversions from start of programme
+    self.all_calculations = []
     
     # common format for all buttons 
-    # Arial size 14 bold, with white text, blue background, button width is 12 char, allround padding of 10px
+    # Arial size 14 bold, with white text, blue background, 
+    # button width 12 char, allround padding 10px
     btn_font = ("Arial 12 bold")
     btn_fg = "#FFFFFF"
     btn_bg = "#008CFF"
@@ -42,10 +45,10 @@ class Converter:
     self.button_frame = Frame(self.temp_frame)
     self.button_frame.grid(row=4)
 
-    self.to_celsius_button = Button(self.button_frame, text="To ° Celsius", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=self.to_celsius)
+    self.to_celsius_button = Button(self.button_frame, text="To ° Celsius", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=lambda:self.to_temp(-459.7))
     self.to_celsius_button.grid(row=0, column=0, padx=padx_num, pady=pady_num)
 
-    self.to_fahrenheit_button = Button(self.button_frame, text="To ° Fahrenheit", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=self.to_fahrenheit)
+    self.to_fahrenheit_button = Button(self.button_frame, text="To ° Fahrenheit", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=lambda:self.to_temp(-273.2))
     self.to_fahrenheit_button.grid(row=0, column=1, padx=padx_num, pady=pady_num)
 
     self.to_info_button = Button(self.button_frame, text="Info", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
@@ -54,14 +57,14 @@ class Converter:
     self.to_history_button = Button(self.button_frame, text="History / Export", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, state=DISABLED)
     self.to_history_button.grid(row=1, column=1, padx=padx_num, pady=pady_num)
 
-    self.to_quit_button = Button(self.button_frame, text="Quit Programme", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=quit)
+    self.to_quit_button = Button(self.button_frame, text="Quit Programme", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=self.quit)
     self.to_quit_button.grid(row=2, column=0, columnspan=2, padx=padx_num, pady=pady_num)
 
   # checks user input and if it's invalid, creates error
   # message and put into var_feedback variable
   # Also saves in var_has_error whether there is error
   def check_temp(self, min_value, tail):
-    has_error = "no"
+    has_error = False
     error = f"Please enter a number that is minimum {min_value}{tail}"
     
     # check that user has entered a valid number...
@@ -70,63 +73,68 @@ class Converter:
     try:
       response = float(response)
       if response < min_value:
-        has_error = "yes"
+        has_error = True
       
     except ValueError:
-      has_error = "yes"
+      has_error = True
 
     # Sets var_has_error so that entry box and
     # labels can be correctly formatted by formatting function
-    if has_error == "yes":
-      self.var_has_error.set("yes")
+    if has_error == True:
+      self.var_has_error.set(True)
       self.var_feedback.set(error)
       return "invalid"
 
     # If we have no errors...
     else:
       # set self.var_has_error to False in case of previous errors
-      self.var_has_error.set("no")
+      self.var_has_error.set(False)
 
       # return number to be converted and
       # enable history button
       self.to_history_button.config(state=NORMAL)
       return response
 
-  # Check temperature is more than -459.7 and
-  # convert to Celsius
-  def to_celsius(self):
-    to_convert = self.check_temp(-459.7, "° Fahrenheit")
+  # Check temperature is at least min value and
+  # convert to either Celsius or Fahrenheit
+  def to_temp(self, min_value):
+    # determine which conversion based on min value
+    if min_value == -459.7:
+      temp_tail = "° Fahrenheit"
+    elif min_value == -273.2:
+      temp_tail = "° Celsius"
+
+    # check temp validity
+    to_convert = self.check_temp(min_value, temp_tail)
 
     if to_convert != "invalid":
-      # do calculation
-      to_convert = float(to_convert)
-      converted = (to_convert - 32) / 1.8
-      message = self.round_1dp(to_convert, converted, "° Celsius")
-      self.var_feedback.set(message)
-    self.output_answer()
+      if min_value == -459.7:
+        # do calculation from F to C
+        to_convert = float(to_convert)
+        converted = (to_convert - 32) / 1.8
+        message = self.round_1dp(to_convert, converted, temp_tail)
 
-  # Check temperature is more than -273.2 and
-  # convert to Fahrenheit
-  def to_fahrenheit(self):
-    to_convert = self.check_temp(-273.2, "° Celsius")
+      elif min_value == -273.2:
+        # do calculation from C to F
+        to_convert = float(to_convert)
+        converted = (to_convert * 1.8) + 32
+        message = self.round_1dp(to_convert, converted, temp_tail)
 
-    if to_convert != "invalid":
-      # do calculation
-      to_convert = float(to_convert)
-      converted = (to_convert * 1.8) + 32
-      message = self.round_1dp(to_convert, converted, "° Fahrenheit")
       self.var_feedback.set(message)
+      self.all_calculations.append(message)
     self.output_answer()
 
   # Rounds calculation to 1 decimal place and
   # sets output message
-  def round_1dp(self, round_to_convert, round_converted, round_to_temp):
+  def round_1dp(self, round_to_convert, round_converted, round_from_temp):
     round_to_convert = round(round_to_convert, 1)
     round_converted = round(round_converted, 1)
-    if round_to_temp == "° Celsius":
-      round_message = f"{round_to_convert}° Fahrenheit = {round_converted}° Celsius"
-    elif round_to_temp == "° Fahrenheit":
+
+    # Determine output message with rounded calculations
+    if round_from_temp == "° Celsius":
       round_message = f"{round_to_convert}° Celsius = {round_converted}° Fahrenheit"
+    elif round_from_temp == "° Fahrenheit":
+      round_message = f"{round_to_convert}° Fahrenheit = {round_converted}° Celsius"
     return round_message
   
   # Shows user output and clears entry widget to be
@@ -135,7 +143,7 @@ class Converter:
     output = self.var_feedback.get()
     has_errors = self.var_has_error.get()
 
-    if has_errors == "yes":
+    if has_errors == True:
       # red text, pink entry box
       self.temp_output.config(fg="#FF0000")
       self.temp_entry.config(bg="#FC9093")
@@ -144,13 +152,15 @@ class Converter:
       # green text, white entry box
       self.temp_output.config(fg="#004C00")
       self.temp_entry.config(bg="#FFFFFF")
-      
-    self.temp_entry.config(textvariable="")
+
+    # set GUI output and clear entry box
     self.temp_output.config(text=output)
     self.temp_entry.delete(0, END)
 
+  # Terminate all GUIs
   def quit(self):
     self.destroy()
+    
 # main routine
 if __name__ == "__main__":
   root = Tk()
