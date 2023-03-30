@@ -1,4 +1,6 @@
 from tkinter import *
+from functools import partial
+import tkinter.scrolledtext as st
 
 class Converter:
 
@@ -16,7 +18,7 @@ class Converter:
     
     # common format for all buttons 
     # Arial size 14 bold, with white text, blue background, 
-    # button width 12 char, allround padding 10px
+    # button width 12 char, allround padding 5px
     btn_font = ("Arial 12 bold")
     btn_fg = "#FFFFFF"
     btn_bg = "#008CFF"
@@ -51,13 +53,13 @@ class Converter:
     self.to_fahrenheit_button = Button(self.button_frame, text="To ° Fahrenheit", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=lambda:self.to_temp(-273.2))
     self.to_fahrenheit_button.grid(row=0, column=1, padx=padx_num, pady=pady_num)
 
-    self.to_info_button = Button(self.button_frame, text="Info", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width)
+    self.to_info_button = Button(self.button_frame, text="Info", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=self.to_info)
     self.to_info_button.grid(row=1, column=0, padx=padx_num, pady=pady_num)
 
-    self.to_history_button = Button(self.button_frame, text="History / Export", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, state=DISABLED)
+    self.to_history_button = Button(self.button_frame, text="History / Export", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, state=DISABLED, command=self.to_history)
     self.to_history_button.grid(row=1, column=1, padx=padx_num, pady=pady_num)
 
-    self.to_quit_button = Button(self.button_frame, text="Quit Programme", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=self.quit)
+    self.to_quit_button = Button(self.button_frame, text="Quit Programme", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=quit)
     self.to_quit_button.grid(row=2, column=0, columnspan=2, padx=padx_num, pady=pady_num)
 
   # checks user input and if it's invalid, creates error
@@ -157,9 +159,155 @@ class Converter:
     self.temp_output.config(text=output)
     self.temp_entry.delete(0, END)
 
+  def to_info(self):
+    Info(self)
+
+  def to_history(self):
+    History_export(self)
+    
   # Terminate all GUIs
   def quit(self):
     self.destroy()
+
+
+class Info:
+  
+  def __init__(self, partner):
+    # common format for all buttons 
+    # Arial size 14 bold, with white text, blue background, 
+    # button width 12 char, allround padding 5px
+    btn_font = ("Arial 12 bold")
+    btn_fg = "#FFFFFF"
+    btn_bg = "#008CFF"
+    btn_width = "12"
+    padx_num = 5
+    pady_num = 5
+
+    # set up dialogue box
+    self.info_box = Toplevel()
+    self.info_box.title("Info")
+
+    # disable info button
+    partner.to_info_button.config(state=DISABLED)
+    
+    # If users press cross at top, closes info GUI and 
+    # enables info button in main GUI
+    self.info_box.protocol("WM_DELETE_WINDOW", partial(self.dismiss_info, partner))
+
+    self.info_frame = Frame(self.info_box, width=300, height=200)
+    self.info_frame.grid()
+
+    self.info_heading = Label(self.info_frame, text="Info", font=("Arial 14 bold"))
+    self.info_heading.grid(row=0, padx=5, pady=5)
+
+    instructions = """Temp Converter is a programme where you type in a temperature and press the button you want to convert it to, either to Fahrenheit with <To F> button, or to Celsius with <To C> button. Converted temperatures are rounded to 1 decimal place.
+
+Note that the lowest temperature possible, known as absolute zero, is at 273.2° Celsius, or 459.7° Fahrenheit. If you try to convert a temperature below this threshold, you will get an error message
+
+<History / Export> button shows you all your conversions in the past, and you can export all your past conversions into a JSON file by pressing <Export> button. You can also exit the History / Export window using <Dismiss> button.
+
+Quit button in the main window lets you turn off the programme.
+
+ You can exit this window using <Dismiss> button."""
+    
+    self.info_instructions = Label(self.info_frame, text=instructions, wraplength="450")
+    self.info_instructions.grid(row=1, padx=5, pady=5)
+
+    self.dismiss_button = Button(self.info_frame, text="Dismiss", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=partial(self.dismiss_info, partner))
+    self.dismiss_button.grid(row=2, padx=padx_num, pady=pady_num)
+
+  # closes info dialogue (used by button and x at top of dialogue)
+  def dismiss_info(self, partner):
+    # Put info button back to normal...
+    partner.to_info_button.config(state=NORMAL)
+    self.info_box.destroy()
+
+
+class History_export:
+  
+  def __init__(self, partner):
+    # common format for all buttons 
+    # Arial size 14 bold, with white text, blue background, 
+    # button width 12 char, allround padding 5px
+    btn_font = ("Arial 12 bold")
+    btn_fg = "#FFFFFF"
+    btn_bg = "#008CFF"
+    btn_width = "12"
+    padx_num = 5
+    pady_num = 5
+    
+    # set up dialogue box
+    self.history_export_box = Toplevel()
+    self.history_export_box.title("History / Export")
+
+    # disable history button
+    partner.to_history_button.config(state=DISABLED)
+    
+    # If users press cross at top, closes history GUI and 
+    # enables history button in main GUI
+    self.history_export_box.protocol("WM_DELETE_WINDOW", partial(self.dismiss_history, partner))
+
+    self.history_frame = Frame(self.history_export_box, width=300, height=200, padx=5, pady=5)
+    self.history_frame.grid(row=0)
+    
+    self.history_heading = Label(self.history_frame, text="History", font=("Arial 14 bold"))
+    self.history_heading.grid(row=0, padx=5, pady=5)
+
+    history_instructions = "Below are all your recent conversions, rounded to 1 d.p., ordered from oldest to newest"
+    self.history_instructions = Label(self.history_frame, text=history_instructions, wraplength="300")
+    self.history_instructions.grid(row=1, padx=5, pady=5)
+    
+    # Use scrolledtext widget to display past 
+    display_list = partner.all_calculations
+    self.past_conversions = st.ScrolledText(self.history_frame, width=40, height=5)
+    self.past_conversions.grid(row=2)
+    for item in display_list:
+      self.past_conversions.insert(INSERT, f"{item}\n")
+    # Making the text in Scrolledtext read only
+    self.past_conversions.configure(state ='disabled')
+
+    self.export_frame = Frame(self.history_export_box, width=300, height=200)
+    self.export_frame.grid(row=1, padx=5, pady=5)
+    
+    self.export_heading = Label(self.export_frame, text="Export", font=("Arial 14 bold"))
+    self.export_heading.grid(row=0, padx=5, pady=5)
+    
+    export_instructions = "Either enter a custom file name and push <Export> button, or simply push <Export> to save all your recent temperature conversions in a .txt file"
+    self.export_instructions = Label(self.export_frame, text=export_instructions, wraplength="300")
+    self.export_instructions.grid(row=1, padx=5, pady=5)
+
+    self.input_frame = Frame(self.export_frame)
+    self.input_frame.grid(row=2)
+    
+    self.export_label = Label(self.input_frame, text="Enter file name")
+    self.export_label.grid(row=0, column=0, padx=5, pady=5)
+    
+    self.export_entry = Entry(self.input_frame, font=("Arial 12"), bg="white")
+    self.export_entry.grid(row=0, column=1, padx=5, pady=5)
+    
+    # error msg
+    self.error_msg = Label(self.export_frame, fg="#FF0000", text="Invalid file name", font = "Arial 12 bold")
+    self.error_msg.grid(row=3)
+
+    self.button_frame = Frame (self.history_export_box)
+    self.button_frame.grid(row=2, padx=5, pady=10)
+    
+    self.dismiss_button = Button(self.button_frame, text="Dismiss", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=partial(self.dismiss_history, partner))
+    self.dismiss_button.grid(row=0, column=0)
+
+    self.export_button = Button(self.button_frame, text="Export", fg=btn_fg, bg=btn_bg, font=btn_font, width=btn_width, command=self.export_conversions)
+    self.export_button.grid(row=0, column=1)
+  
+  # exports all conversions from start of programme into an
+  # automatic or entered filename
+  def export_conversions(self):
+    pass
+    
+  # closes history dialogue (used by button and x at top of dialogue)
+  def dismiss_history(self, partner):
+    # Put history button back to normal...
+    partner.to_history_button.config(state=NORMAL)
+    self.history_export_box.destroy()
     
 # main routine
 if __name__ == "__main__":
